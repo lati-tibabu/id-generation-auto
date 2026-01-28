@@ -74,9 +74,9 @@ const IDTemplate = (props) => {
   const buttonStyle = {
     padding: '10px 20px',
     borderRadius: '8px',
-    border: '1px solid #1877f2',
+    border: '1px solid #2563eb',
     backgroundColor: '#fff',
-    color: '#1877f2',
+    color: '#2563eb',
     fontWeight: '700',
     cursor: 'pointer',
     fontSize: '14px',
@@ -85,7 +85,7 @@ const IDTemplate = (props) => {
 
   const primaryButtonStyle = {
     ...buttonStyle,
-    backgroundColor: '#1877f2',
+    backgroundColor: '#2563eb',
     color: '#fff',
   };
 
@@ -140,7 +140,12 @@ const IDTemplate = (props) => {
         {/* Photo Section */}
         <div className="photo-section">
           <div className="emp-photo">
-            {props.photo && <img src={URL.createObjectURL(props.photo)} alt="Employee" />}
+            {props.photo && (
+              <img 
+                src={typeof props.photo === 'string' ? props.photo : URL.createObjectURL(props.photo)} 
+                alt="Employee" 
+              />
+            )}
           </div>
           <div className="emp-id-bar">
             {props.idNumber && (
