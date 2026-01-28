@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+
+.id-card{
+    position: relative;
+    width: 171.2mm;
+    height: 107.96mm;
+    font-family: 'Montserrat', sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    image-rendering: -webkit-optimize-contrast;
+    overflow: hidden;
+}
+
+.template-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    object-fit: cover;
+}
+
+.front-id{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+}
+
+.info-section{
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+}
+
+.id-validity{
+    display: flex;
+    flex-direction: row;
+    gap: 19mm;
+    margin-top: 10mm;
+    margin-left: 8mm;
+    font-weight: bold;
+    font-size: small;
+}
+
+.id-val-section{
+    display: flex;
+    flex-direction: column;
+    gap: 8mm;
+}
+
+.name-job-secion{
+    display: flex;
+    flex-direction: column;
+    gap: 3mm;
+    margin-top: 49mm;
+    margin-left: 8mm;
+}
+
+.english-name{
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 18pt;
+    font-weight: 800;
+}
+
+.job-position .position-title-en{
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+.id-number, .phone, .issue-date, .expiry-date {
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+.local-name{
+    font-size: 10pt;
+    font-weight: 600;
+}
+
+.job-position{
+    font-size: 10pt;
+    font-weight: 600;
+    color: #ff0606ff;
+}
+
+.emp-photo img{
+    width: 47.05mm;
+    height: 47.05mm;
+    object-fit: cover;
+}
+
+.emp-id-bar {
+  width: 34.808mm;
+  height: 10.652mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-section{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5mm;
+    margin-right: 13.5mm;
+    margin-top: 33mm;
+    position: relative;
+    z-index: 1;
+}
+
+
+
+.back-id{
+    position: relative;
+    z-index: 1;
+}
+
+.qr-code-section div{
+    position: relative;
+    top: 67mm;
+    left: 13.5mm;
+    z-index: 2;
+}

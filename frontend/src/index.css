@@ -1,0 +1,17 @@
+:root {
+  font-family: 'Montserrat', sans-serif;
+}
+
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+.form-template-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: flex-start;
+    margin-top: 20px;
+  }
