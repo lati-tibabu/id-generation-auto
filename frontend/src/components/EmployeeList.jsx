@@ -10,12 +10,19 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
-  MoreVertical
+  MoreVertical,
+  Loader2
 } from 'lucide-react';
 import IDTemplate from './id_template';
+import { removeBackground, preload } from "@imgly/background-removal";
 
 const EmployeeList = ({ setActiveTab }) => {
+  useEffect(() => {
+    preload({ model: 'isnet_quint8' }).catch(err => console.error("Preload failed:", err));
+  }, []);
+
   const [employees, setEmployees] = useState([]);
+  const [isRemovingBackground, setIsRemovingBackground] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -276,11 +283,42 @@ const EmployeeList = ({ setActiveTab }) => {
              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '12px', fontWeight: '700', color: '#64748b' }}>Update Photo</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                   <img src={editFormData.photo} alt="Current" style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover' }} />
-                   <input type="file" accept="image/*" onChange={async (e) => {
+                   {isRemovingBackground ? (
+                      <div style={{ width: '50px', height: '50px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <Loader2 size={24} className="animate-spin" style={{ color: '#2563eb' }} />
+                      </div>
+                   ) : (
+                      <img src={editFormData.photo} alt="Current" style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover' }} />
+                   )}
+                   <input type="file" accept="image/*" disabled={isRemovingBackground} onChange={async (e) => {
                       if (e.target.files[0]) {
-                         const base64 = await convertFileToBase64(e.target.files[0]);
-                         setEditFormData({...editFormData, photo: base64});
+                         setIsRemovingBackground(true);
+                         console.log("Updating photo, removing background for:", e.target.files[0].name);
+                         console.log("SharedArrayBuffer available:", typeof SharedArrayBuffer !== 'undefined');
+                         console.log("Cross-origin isolated:", window.crossOriginIsolated);
+                         try {
+                            const config = {
+                               debug: true,
+                               model: 'isnet_quint8',
+                               progress: (key, current, total) => {
+                                  console.log(`Downloading ${key}: ${Math.round(current/total*100)}%`);
+                               }
+                            };
+                            const blob = await removeBackground(e.target.files[0], config);
+                            console.log("Background removal successful, blob size:", blob.size);
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                               setEditFormData({...editFormData, photo: reader.result});
+                               setIsRemovingBackground(false);
+                            };
+                            reader.readAsDataURL(blob);
+                         } catch (error) {
+                            console.error("Background removal failed:", error);
+                            alert("Background removal failed. Using original image.");
+                            const base64 = await convertFileToBase64(e.target.files[0]);
+                            setEditFormData({...editFormData, photo: base64});
+                            setIsRemovingBackground(false);
+                         }
                       }
                    }} style={{ fontSize: '14px' }} />
                 </div>
@@ -296,7 +334,9 @@ const EmployeeList = ({ setActiveTab }) => {
                 </div>
              </div>
              <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="submit" style={actionButtonStyle}>Save Changes</button>
+                <button type="submit" disabled={isRemovingBackground} style={{ ...actionButtonStyle, backgroundColor: isRemovingBackground ? '#94a3b8' : actionButtonStyle.backgroundColor }}>
+                   {isRemovingBackground ? 'Processing...' : 'Save Changes'}
+                </button>
                 <button type="button" onClick={() => setEditingEmployee(null)} style={{ ...actionButtonStyle, backgroundColor: '#64748b' }}>Cancel</button>
              </div>
           </form>

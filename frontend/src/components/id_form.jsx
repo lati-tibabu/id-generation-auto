@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
-import { User, CreditCard, Phone, Calendar, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, CreditCard, Phone, Calendar, Upload, Loader2 } from 'lucide-react';
+import { removeBackground, preload } from "@imgly/background-removal";
 
 const IDForm = ({ onFormChange, onSave }) => {
+  useEffect(() => {
+    // Preload models as soon as the component mounts
+    preload({ model: 'isnet_quint8' }).catch(err => console.error("Preload failed:", err));
+  }, []);
+
+  const [isRemovingBackground, setIsRemovingBackground] = useState(false);
   const [formData, setFormData] = useState({
     fullNameEn: '',
     fullNameLocal: '',
@@ -21,16 +28,48 @@ const IDForm = ({ onFormChange, onSave }) => {
     onFormChange(updatedData);
   };
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const updatedData = { ...formData, photo: reader.result };
-        setFormData(updatedData);
-        onFormChange(updatedData);
-      };
-      reader.readAsDataURL(file);
+      setIsRemovingBackground(true);
+      console.log("Starting background removal for:", file.name);
+      console.log("SharedArrayBuffer available:", typeof SharedArrayBuffer !== 'undefined');
+      console.log("Cross-origin isolated:", window.crossOriginIsolated);
+      try {
+        const config = {
+          debug: true,
+          model: 'isnet_quint8',
+          output: {
+            format: 'image/png',
+            quality: 0.8,
+            type: 'foreground'
+          },
+          progress: (key, current, total) => {
+            console.log(`Downloading ${key}: ${Math.round(current/total*100)}%`);
+          }
+        };
+        const blob = await removeBackground(file, config);
+        console.log("Background removal successful, blob size:", blob.size);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const updatedData = { ...formData, photo: reader.result };
+          setFormData(updatedData);
+          onFormChange(updatedData);
+          setIsRemovingBackground(false);
+        };
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        console.error("Background removal failed:", error);
+        alert("Background removal failed. Using original image. Check console for details.");
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const updatedData = { ...formData, photo: reader.result };
+          setFormData(updatedData);
+          onFormChange(updatedData);
+          setIsRemovingBackground(false);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -131,27 +170,32 @@ const IDForm = ({ onFormChange, onSave }) => {
             gap: '8px'
           }}>
             <Upload size={18} />
-            Choose Photo
-            <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+            {isRemovingBackground ? 'Processing...' : 'Choose Photo'}
+            <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} disabled={isRemovingBackground} />
           </label>
-          {formData.photo && <span style={{ fontSize: '12px', color: '#10b981' }}> Photo uploaded</span>}
+          {isRemovingBackground && <Loader2 size={18} className="animate-spin" style={{ color: '#2563eb' }} />}
+          {formData.photo && !isRemovingBackground && <span style={{ fontSize: '12px', color: '#10b981' }}> Photo uploaded</span>}
         </div>
       </div>
 
-      <button onClick={() => onSave(formData)} style={{ 
-        width: '100%', 
-        padding: '14px', 
-        backgroundColor: '#2563eb', 
-        color: 'white', 
-        border: 'none', 
-        borderRadius: '10px', 
-        fontSize: '16px', 
-        fontWeight: '700', 
-        cursor: 'pointer',
-        marginTop: '10px',
-        boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
-      }}>
-        Generate & Save ID Card
+      <button 
+        disabled={isRemovingBackground}
+        onClick={() => onSave(formData)} 
+        style={{ 
+          width: '100%', 
+          padding: '14px', 
+          backgroundColor: isRemovingBackground ? '#94a3b8' : '#2563eb', 
+          color: 'white', 
+          border: 'none', 
+          borderRadius: '10px', 
+          fontSize: '16px', 
+          fontWeight: '700', 
+          cursor: isRemovingBackground ? 'not-allowed' : 'pointer',
+          marginTop: '10px',
+          boxShadow: isRemovingBackground ? 'none' : '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
+        }}
+      >
+        {isRemovingBackground ? 'Processing Photo...' : 'Generate & Save ID Card'}
       </button>
     </div>
   );

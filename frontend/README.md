@@ -13,6 +13,7 @@ A semi-automated professional ID card generation tool built with React and Vite.
   - Issue & Expiry Dates (Auto-calculates expiry date based on issue date)
   - Employee Photo Upload
 - **Automated Codes**: Generates unique Barcodes and QR codes for each ID card.
+- **AI Background Removal**: Automatically removes the background from uploaded employee photos directly in the browser using `@imgly/background-removal`.
 - **High-Resolution Export**: 
   - Export front/back sides individually as **PNG**.
   - Export the complete double-sided ID as a **PDF**.
@@ -27,6 +28,56 @@ A semi-automated professional ID card generation tool built with React and Vite.
   - `jspdf`: For PDF generation.
   - `react-barcode`: For dynamic barcode rendering.
   - `react-qr-code`: For dynamic QR code rendering.
+  - `@imgly/background-removal`: For client-side AI background removal.
+
+## 🖼️ Background Removal Implementation
+
+This project uses `@imgly/background-removal` to process employee photos directly in the browser. This ensures data privacy as the images never leave the user's device and avoids server-side processing costs.
+
+### Key Technical Details
+
+- **Model**: `isnet_quint8` (the quantized version) is used for a balance between speed and quality (approx. 40MB).
+- **Execution**: Runs in the browser using WASM and ONNX Runtime.
+- **Preloading**: Models are preloaded when the `IDForm` or `EmployeeList` components mount to ensure responsiveness when the user actually uploads an image.
+- **Performance**: High performance is achieved by cross-origin isolating the site via COOP/COEP headers, enabling the use of `SharedArrayBuffer` for multi-threaded processing.
+
+### Configuration
+
+The integration is configured in `vite.config.js` to serve the necessary headers:
+
+```javascript
+server: {
+  headers: {
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Embedder-Policy': 'require-corp',
+  },
+}
+```
+
+### Usage in Code
+
+To use the background removal in a component:
+
+```javascript
+import { removeBackground } from "@imgly/background-removal";
+
+const handleUpload = async (file) => {
+  setIsLoading(true);
+  try {
+    const processedBlob = await removeBackground(file, {
+      model: 'isnet_quint8',
+      progress: (key, current, total) => {
+        console.log(`Downloading ${key}: ${Math.round(current/total*100)}%`);
+      }
+    });
+    // Use the processedBlob as an image source
+  } catch (error) {
+    console.error("Background removal failed", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
+```
 
 ## 📥 Getting Started
 

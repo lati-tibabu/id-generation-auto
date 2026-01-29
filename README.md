@@ -5,6 +5,7 @@ A comprehensive ID card generation and management system for employees.
 ## Features
 
 - Generate professional ID cards with employee information
+- Transparent AI Background Removal for employee photos (In-browser)
 - Store employee data in PostgreSQL database
 - Employee photos stored as base64 in database
 - Responsive web interface with sidebar navigation
@@ -22,9 +23,19 @@ A comprehensive ID card generation and management system for employees.
 ### Frontend
 - React.js
 - Vite build tool
+- @imgly/background-removal (AI Background processing)
 - HTML2Canvas for image export
 - jsPDF for PDF export
 - React Barcode & QR Code libraries
+
+## AI Background Removal
+
+The system includes an integrated AI background removal feature powered by `@imgly/background-removal`.
+
+- **Privacy**: Processing happens entirely in the user's browser; images are NOT sent to any external server for background removal.
+- **Speed**: Optimized using WASM and quantized models (`isnet_quint8`).
+- **Seamless Integration**: Automatically triggers when a photo is uploaded during employee registration or profile updates.
+- **Performance**: Uses `SharedArrayBuffer` (via COOP/COEP headers) for multi-threaded processing.
 
 ## Project Structure
 
