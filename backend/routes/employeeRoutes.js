@@ -73,6 +73,54 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Bulk create employees
+router.post('/bulk', async (req, res) => {
+  try {
+    const employeesData = req.body; // Array of employee objects
+
+    if (!Array.isArray(employeesData)) {
+      return res.status(400).json({ error: 'Data must be an array' });
+    }
+
+    const createdEmployees = await Employee.bulkCreate(employeesData, {
+      validate: true,
+      ignoreDuplicates: false // We want to know if there are duplicates
+    });
+
+    res.status(201).json(createdEmployees);
+  } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      res.status(400).json({ error: 'One or more ID Numbers already exist' });
+    } else if (error.name === 'SequelizeValidationError') {
+        res.status(400).json({ error: 'Validation failed: ' + error.errors.map(e => e.message).join(', ') });
+    } else {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error: ' + error.message });
+    }
+  }
+});
+
+// Bulk delete employees
+router.delete('/bulk', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Please provide an array of IDs to delete' });
+    }
+
+    await Employee.destroy({
+      where: {
+        id: ids
+      }
+    });
+
+    res.json({ message: `${ids.length} employees deleted successfully` });
+  } catch (error) {
+    console.error('Bulk delete error:', error);
+    res.status(500).json({ error: 'Internal server error: ' + error.message });
+  }
+});
+
 // Update employee
 router.put('/:id', async (req, res) => {
   try {
@@ -129,33 +177,6 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Bulk create employees
-router.post('/bulk', async (req, res) => {
-  try {
-    const employeesData = req.body; // Array of employee objects
-
-    if (!Array.isArray(employeesData)) {
-      return res.status(400).json({ error: 'Data must be an array' });
-    }
-
-    const createdEmployees = await Employee.bulkCreate(employeesData, {
-      validate: true,
-      ignoreDuplicates: false // We want to know if there are duplicates
-    });
-
-    res.status(201).json(createdEmployees);
-  } catch (error) {
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      res.status(400).json({ error: 'One or more ID Numbers already exist' });
-    } else if (error.name === 'SequelizeValidationError') {
-        res.status(400).json({ error: 'Validation failed: ' + error.errors.map(e => e.message).join(', ') });
-    } else {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error: ' + error.message });
-    }
   }
 });
 

@@ -22,6 +22,7 @@ const EmployeeList = ({ setActiveTab }) => {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
 
   useEffect(() => {
     fetchEmployees();
@@ -103,6 +104,41 @@ const EmployeeList = ({ setActiveTab }) => {
       setEditingEmployee(null);
     } catch (error) {
       alert('Error updating employee: ' + error.message);
+    }
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(filteredEmployees.map(emp => emp.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} employees?`)) {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch('http://localhost:5000/api/employees/bulk', {
+          method: 'DELETE',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          body: JSON.stringify({ ids: selectedIds })
+        });
+        if (!response.ok) throw new Error('Failed to delete selected employees');
+        setEmployees(employees.filter(emp => !selectedIds.includes(emp.id)));
+        setSelectedIds([]);
+      } catch (err) {
+        alert('Error deleting employees: ' + err.message);
+      }
     }
   };
 
@@ -273,7 +309,22 @@ const EmployeeList = ({ setActiveTab }) => {
       ) : (
         <div style={tableContainerStyle}>
           <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b' }}>Registered Employees ({filteredEmployees.length})</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', margin: 0 }}>Registered Employees ({filteredEmployees.length})</h3>
+                {selectedIds.length > 0 && (
+                  <button 
+                    onClick={handleBulkDelete}
+                    style={{ 
+                      ...actionButtonStyle, 
+                      backgroundColor: '#ef4444', 
+                      padding: '8px 16px',
+                      fontSize: '13px'
+                    }}
+                  >
+                    Delete Selected ({selectedIds.length})
+                  </button>
+                )}
+            </div>
             <div style={{ display: 'flex', gap: '12px' }}>
               <Filter size={18} style={{ color: '#64748b', cursor: 'pointer' }} />
               <Download size={18} style={{ color: '#64748b', cursor: 'pointer' }} />
@@ -282,6 +333,13 @@ const EmployeeList = ({ setActiveTab }) => {
           <table style={tableStyle}>
             <thead>
               <tr>
+                <th style={{ ...thStyle, width: '40px' }}>
+                  <input 
+                    type="checkbox" 
+                    onChange={handleSelectAll}
+                    checked={selectedIds.length === filteredEmployees.length && filteredEmployees.length > 0}
+                  />
+                </th>
                 <th style={thStyle}>Photo</th>
                 <th style={thStyle}>Name</th>
                 <th style={thStyle}>ID Number</th>
@@ -294,7 +352,14 @@ const EmployeeList = ({ setActiveTab }) => {
             </thead>
             <tbody>
               {filteredEmployees.map((emp) => (
-                <tr key={emp.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <tr key={emp.id} style={{ borderBottom: '1px solid #f1f5f9', backgroundColor: selectedIds.includes(emp.id) ? '#f8fafc' : 'transparent' }}>
+                  <td style={{ ...tdStyle, width: '40px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(emp.id)}
+                      onChange={() => handleSelectOne(emp.id)}
+                    />
+                  </td>
                   <td style={tdStyle}>
                     <img src={emp.photo} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
                   </td>
