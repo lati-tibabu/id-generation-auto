@@ -12,7 +12,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  // origin: ['http://172.10.11.211:5173'], // your frontend
+  origin: [process.env.FRONTEND_URL || 'http://localhost:5173'], // your frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+
 app.use(express.json({ limit: '10mb' })); // For base64 images
 app.use(express.urlencoded({ extended: true }));
 
