@@ -28,17 +28,18 @@ const IDTemplate = (props) => {
     await document.fonts.ready;
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // scale to reach ~4000px width from 171.2mm (~647px base)
-    const scaleFactor = 6.1818; 
+    // scale 4 is ~400 DPI, which is high quality but results in much smaller files
+    const scaleFactor = 4; 
     const canvas = await html2canvas(element, { 
       scale: scaleFactor,
       useCORS: true,
       logging: false,
-      backgroundColor: null,
+      backgroundColor: '#ffffff', // Background color for JPEG
     });
     const link = document.createElement('a');
     link.download = filename;
-    link.href = canvas.toDataURL('image/png', 1.0);
+    // Use JPEG with 0.85 quality for significant size reduction over PNG
+    link.href = canvas.toDataURL('image/jpeg', 0.85);
     link.click();
   };
 
@@ -47,12 +48,12 @@ const IDTemplate = (props) => {
   };
 
   const exportFrontAsPNG = () => {
-    const filename = `${sanitizeFilename(props.fullNameEn)}_front.png`;
+    const filename = `${sanitizeFilename(props.fullNameEn)}_front.jpg`;
     exportAsImage(frontRef.current, filename);
     trackEvent('download_png_front');
   };
   const exportBackAsPNG = () => {
-    const filename = `${sanitizeFilename(props.fullNameEn)}_back.png`;
+    const filename = `${sanitizeFilename(props.fullNameEn)}_back.jpg`;
     exportAsImage(backRef.current, filename);
     trackEvent('download_png_back');
   };
@@ -60,27 +61,32 @@ const IDTemplate = (props) => {
   const exportAsPDF = async () => {
     await document.fonts.ready;
     await new Promise(resolve => setTimeout(resolve, 500));
-    const scaleFactor = 6.1818;
+    const scaleFactor = 4; 
     const pdf = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
-      format: [171.2, 107.96]
+      format: [171.2, 107.96],
+      compress: true
     });
 
     const frontCanvas = await html2canvas(frontRef.current, { 
       scale: scaleFactor, 
-      useCORS: true 
+      useCORS: true,
+      backgroundColor: '#ffffff'
     });
     const backCanvas = await html2canvas(backRef.current, { 
       scale: scaleFactor, 
-      useCORS: true 
+      useCORS: true,
+      backgroundColor: '#ffffff'
     });
-    const frontImgData = frontCanvas.toDataURL('image/png', 1.0);
-    const backImgData = backCanvas.toDataURL('image/png', 1.0);
+    
+    // Using JPEG for the PDF images significantly reduces file size
+    const frontImgData = frontCanvas.toDataURL('image/jpeg', 0.8);
+    const backImgData = backCanvas.toDataURL('image/jpeg', 0.8);
 
-    pdf.addImage(frontImgData, 'PNG', 0, 0, 171.2, 107.96);
+    pdf.addImage(frontImgData, 'JPEG', 0, 0, 171.2, 107.96, undefined, 'FAST');
     pdf.addPage();
-    pdf.addImage(backImgData, 'PNG', 0, 0, 171.2, 107.96);
+    pdf.addImage(backImgData, 'JPEG', 0, 0, 171.2, 107.96, undefined, 'FAST');
 
     pdf.save(`${sanitizeFilename(props.fullNameEn)}.pdf`);
     trackEvent('download_pdf');
