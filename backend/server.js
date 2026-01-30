@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
 const { sequelize, User } = require('./models');
 const employeeRoutes = require('./routes/employeeRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 const { router: authRoutes, auth } = require('./routes/authRoutes');
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Database sync and seeding
 sequelize.sync()

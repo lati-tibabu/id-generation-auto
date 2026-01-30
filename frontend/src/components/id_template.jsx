@@ -11,6 +11,18 @@ const IDTemplate = (props) => {
   const frontRef = useRef();
   const backRef = useRef();
 
+  const trackEvent = async (type) => {
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/analytics/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, employeeId: props.id }),
+      });
+    } catch (err) {
+      console.error('Failed to track event:', err);
+    }
+  };
+
   const exportAsImage = async (element, filename) => {
     // Wait for fonts to be ready and a small buffer for layout
     await document.fonts.ready;
@@ -37,10 +49,12 @@ const IDTemplate = (props) => {
   const exportFrontAsPNG = () => {
     const filename = `${sanitizeFilename(props.fullNameEn)}_front.png`;
     exportAsImage(frontRef.current, filename);
+    trackEvent('download_png_front');
   };
   const exportBackAsPNG = () => {
     const filename = `${sanitizeFilename(props.fullNameEn)}_back.png`;
     exportAsImage(backRef.current, filename);
+    trackEvent('download_png_back');
   };
 
   const exportAsPDF = async () => {
@@ -69,6 +83,7 @@ const IDTemplate = (props) => {
     pdf.addImage(backImgData, 'PNG', 0, 0, 171.2, 107.96);
 
     pdf.save(`${sanitizeFilename(props.fullNameEn)}.pdf`);
+    trackEvent('download_pdf');
   };
 
   const buttonStyle = {

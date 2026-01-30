@@ -41,6 +41,23 @@ const App = () => {
   const [phoneError, setPhoneError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState(null);
+
+  const fetchStats = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/analytics/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    }
+  };
 
   // Check token validity on mount
   useEffect(() => {
@@ -50,9 +67,17 @@ const App = () => {
             headers: { 'Authorization': `Bearer ${token}` }
         }).then(res => {
             if (!res.ok) handleLogout();
+            else fetchStats();
         }).catch(() => handleLogout());
     }
   }, []);
+
+  // Fetch stats when dashboard becomes active
+  useEffect(() => {
+    if (activeTab === 'dashboard' && user) {
+      fetchStats();
+    }
+  }, [activeTab, user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -158,21 +183,66 @@ const App = () => {
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
             
             <main style={mainStyles}>
-              {activeTab === 'dashboard' && (
+              {activeTab === 'dashboard' && stats && (
                 <div style={{ padding: '40px' }}>
                   <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '8px' }}>Dashboard</h1>
                   <p style={{ color: '#64748b' }}>Welcome to OTech ID Management System</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginTop: '32px' }}>
+                  
+                  {/* Summary Cards */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', marginTop: '32px' }}>
                     {[
-                      { label: 'Total Employees', value: '...', color: '#2563eb' },
-                      { label: 'IDs Generated', value: '...', color: '#059669' },
-                      { label: 'Pending Expiry', value: '0', color: '#d97706' },
+                      { label: 'Total Employees', value: stats.employees.total, color: '#2563eb' },
+                      { label: 'Total Downloads', value: stats.downloads.total, color: '#059669' },
+                      { label: 'Total Verifications', value: stats.verifications.total, color: '#d97706' },
+                      { label: 'Today\'s Verifications', value: stats.verifications.today, color: '#7c3aed' },
                     ].map(stat => (
-                      <div key={stat.label} style={{ padding: '24px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                      <div key={stat.label} style={{ padding: '24px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                         <span style={{ fontSize: '14px', color: '#64748b', fontWeight: '600' }}>{stat.label}</span>
                         <div style={{ fontSize: '28px', fontWeight: '700', color: stat.color, marginTop: '8px' }}>{stat.value}</div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Secondary stats & Activity */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginTop: '32px' }}>
+                    <div style={{ padding: '24px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                      <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px' }}>Recent Activity</h2>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {stats.recentActivity.map((activity, idx) => (
+                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #f1f5f9' }}>
+                            <div>
+                              <span style={{ fontWeight: '600', textTransform: 'uppercase', fontSize: '11px', color: activity.type.includes('verification') ? '#d97706' : '#059669', backgroundColor: activity.type.includes('verification') ? '#fffbeb' : '#ecfdf5', padding: '2px 8px', borderRadius: '4px', marginRight: '10px' }}>
+                                {activity.type.replace('_', ' ')}
+                              </span>
+                              <span style={{ fontSize: '14px', fontWeight: '500' }}>
+                                {activity.Employee?.fullNameEn || 'Unknown Employee'}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>{new Date(activity.timestamp).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '24px', backgroundColor: 'white', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                      <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '20px' }}>Verification Stats</h2>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {[
+                          { label: 'Past 7 Days', value: stats.verifications.week },
+                          { label: 'Past 30 Days', value: stats.verifications.month },
+                        ].map(item => (
+                          <div key={item.label}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                              <span style={{ fontSize: '14px', color: '#64748b' }}>{item.label}</span>
+                              <span style={{ fontSize: '14px', fontWeight: '700' }}>{item.value}</span>
+                            </div>
+                            <div style={{ height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', backgroundColor: '#2563eb', width: `${Math.min((item.value / (stats.verifications.total || 1)) * 100, 100)}%` }}></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

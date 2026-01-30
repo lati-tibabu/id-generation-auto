@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { User, Phone, IdCard, Calendar, CheckCircle, AlertCircle, Building } from 'lucide-react';
 
@@ -7,6 +7,7 @@ const EmployeeVerification = () => {
     const [employee, setEmployee] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const lastTrackedId = useRef(null);
 
     useEffect(() => {
         const fetchEmployee = async () => {
@@ -17,6 +18,17 @@ const EmployeeVerification = () => {
                 }
                 const data = await response.json();
                 setEmployee(data);
+                
+                // Track verification event (only once per ID in development/strict mode)
+                if (lastTrackedId.current !== id) {
+                    lastTrackedId.current = id;
+                    fetch(`${import.meta.env.VITE_API_URL}/analytics/track`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'verification', employeeId: data.id }),
+                    }).catch(err => console.error('Tracking failed:', err));
+                }
+
             } catch (err) {
                 setError(err.message);
             } finally {

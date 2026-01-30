@@ -23,5 +23,10 @@ db.sequelize = sequelize;
 // Import models
 db.Employee = require('./Employee')(sequelize, Sequelize);
 db.User = require('./User')(sequelize, Sequelize);
+db.Analytics = require('./Analytics')(sequelize, Sequelize);
+
+// Associations
+db.Employee.hasMany(db.Analytics, { foreignKey: 'employeeId' });
+db.Analytics.belongsTo(db.Employee, { foreignKey: 'employeeId' });
 
 module.exports = db;
