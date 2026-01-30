@@ -44,7 +44,7 @@ const App = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-        fetch('http://localhost:5000/api/auth/verify', {
+        fetch(`${import.meta.env.VITE_API_URL}/auth/verify`, {
             headers: { 'Authorization': `Bearer ${token}` }
         }).then(res => {
             if (!res.ok) handleLogout();
@@ -102,7 +102,7 @@ const App = () => {
     try {
       const photoBase64 = await convertFileToBase64(formData.photo);
       const employeeDataToSave = { ...formData, photo: photoBase64 };
-      const response = await fetch('http://localhost:5000/api/employees', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/employees`, {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',

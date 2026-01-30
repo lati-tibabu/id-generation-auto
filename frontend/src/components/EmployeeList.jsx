@@ -38,7 +38,7 @@ const EmployeeList = ({ setActiveTab }) => {
   const fetchEmployees = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch('http://localhost:5000/api/employees', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/employees`, {
           headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) {
@@ -81,7 +81,7 @@ const EmployeeList = ({ setActiveTab }) => {
     const token = localStorage.getItem('token');
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        const response = await fetch('http://localhost:5000/api/employees/' + id, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/employees/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -97,7 +97,7 @@ const EmployeeList = ({ setActiveTab }) => {
     event.preventDefault();
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch('http://localhost:5000/api/employees/' + editingEmployee.id, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/employees/${editingEmployee.id}`, {
         method: 'PUT',
         headers: { 
             'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ const EmployeeList = ({ setActiveTab }) => {
     if (window.confirm(`Are you sure you want to delete ${selectedIds.length} employees?`)) {
       const token = localStorage.getItem('token');
       try {
-        const response = await fetch('http://localhost:5000/api/employees/bulk', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/employees/bulk`, {
           method: 'DELETE',
           headers: { 
             'Content-Type': 'application/json',
