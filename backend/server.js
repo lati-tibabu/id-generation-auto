@@ -33,7 +33,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/employees', auth, employeeRoutes);
+app.use('/api/employees', employeeRoutes);
 
 // Database sync and seeding
 sequelize.sync()

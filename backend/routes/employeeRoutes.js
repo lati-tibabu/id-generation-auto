@@ -1,9 +1,10 @@
 const express = require('express');
 const { Employee } = require('../models');
+const { auth } = require('./authRoutes');
 const router = express.Router();
 
 // Create employee
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const {
       fullNameEn,
@@ -47,7 +48,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get all employees
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const employees = await Employee.findAll({
       order: [['createdAt', 'DESC']],
@@ -74,7 +75,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Bulk create employees
-router.post('/bulk', async (req, res) => {
+router.post('/bulk', auth, async (req, res) => {
   try {
     const employeesData = req.body; // Array of employee objects
 
@@ -101,7 +102,7 @@ router.post('/bulk', async (req, res) => {
 });
 
 // Bulk delete employees
-router.delete('/bulk', async (req, res) => {
+router.delete('/bulk', auth, async (req, res) => {
   try {
     const { ids } = req.body;
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -122,7 +123,7 @@ router.delete('/bulk', async (req, res) => {
 });
 
 // Update employee
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   try {
     const employee = await Employee.findByPk(req.params.id);
     if (!employee) {
@@ -165,7 +166,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete employee
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     const employee = await Employee.findByPk(req.params.id);
     if (!employee) {

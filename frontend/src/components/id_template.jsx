@@ -170,7 +170,12 @@ const IDTemplate = (props) => {
         {/* EMP ID QR Code Section */}
         <div className="qr-code-section">
           <div>
-            {props.idNumber && <QRCode value={props.idNumber} size={90} />}
+            {props.idNumber && (
+              <QRCode 
+                value={props.id ? `${window.location.origin}/employee/info/${props.id}` : props.idNumber} 
+                size={90} 
+              />
+            )}
           </div>
         </div>
       </div>
