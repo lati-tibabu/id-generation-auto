@@ -16,6 +16,15 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' })); // For base64 images
 app.use(express.urlencoded({ extended: true }));
 
+// Health Check
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime() 
+  });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', auth, employeeRoutes);
